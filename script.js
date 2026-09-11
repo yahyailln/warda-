@@ -20,7 +20,6 @@ const centerY = height / 2 - 40;
 let state = 0; // 0: stem, 1: leaves, 2: flower, 3: text, 4: finished
 let progress = 0;
 
-// متغير لتتبع لون الخلفية الحالية
 let bgStyle = '#000000';
 
 // 1. رسم الساق بالأخضر الغني
@@ -71,38 +70,49 @@ function drawLeaves() {
     }
 }
 
-// رسم بتلة وردة رومانسية حقيقية بحجم كبير
+// 3. دالة رسم بتلة وردة واقعية 4K مع الظلال والعروق الدقيقة
 function drawBigPetal(x, y, radius, angle, color1, color2) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    let gradient = ctx.createLinearGradient(0, 0, 0, -radius);
+    let gradient = ctx.createRadialGradient(0, 0, 5, 0, -radius, radius);
     gradient.addColorStop(0, color1);
-    gradient.addColorStop(1, color2);
+    gradient.addColorStop(0.7, color2);
+    gradient.addColorStop(1, '#fff0f5');
 
     ctx.fillStyle = gradient;
-    ctx.strokeStyle = '#ffb3c6';
-    ctx.lineWidth = 1.5;
-    ctx.shadowBlur = 18;
+    ctx.strokeStyle = 'rgba(255, 182, 193, 0.5)';
+    ctx.lineWidth = 1;
+    
+    ctx.shadowBlur = 12;
     ctx.shadowColor = color1;
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(-radius * 0.65, -radius * 0.45, -radius * 0.55, -radius * 0.95, 0, -radius);
-    ctx.bezierCurveTo(radius * 0.55, -radius * 0.95, radius * 0.65, -radius * 0.45, 0, 0);
+    ctx.bezierCurveTo(-radius * 0.7, -radius * 0.3, -radius * 0.6, -radius, 0, -radius);
+    ctx.bezierCurveTo(radius * 0.6, -radius, radius * 0.7, -radius * 0.3, 0, 0);
     ctx.fill();
+    ctx.stroke();
+
+    // عروق دقيقة للبتلة (تفاصيل 4K)
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 0.8;
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-radius * 0.15, -radius * 0.5, 0, -radius * 0.85);
     ctx.stroke();
 
     ctx.restore();
 }
 
-// ألوان متناسقة ومكبرة للوردة
+// طبقات كلاسيكية مكثفة لوردة واقعية وممتلئة
 const petalRings = [
-    { count: 6, radius: 45, c1: '#8e44ad', c2: '#ff2a75' },  
-    { count: 8, radius: 75, c1: '#ff007f', c2: '#ff5252' },  
-    { count: 10, radius: 110, c1: '#ff4d8d', c2: '#ff75a0' }, 
-    { count: 12, radius: 145, c1: '#ff75a0', c2: '#fec3a6' }  
+    { count: 5,  radius: 30,  c1: '#4a001f', c2: '#90003e' },
+    { count: 7,  radius: 55,  c1: '#800037', c2: '#c70039' },
+    { count: 10, radius: 85,  c1: '#b10042', c2: '#ff1493' },
+    { count: 13, radius: 120, c1: '#ff007f', c2: '#ff69b4' },
+    { count: 16, radius: 155, c1: '#ff3399', c2: '#ffb6c1' }
 ];
 
 let ringIdx = 0;
@@ -111,7 +121,7 @@ let frameCounter = 0;
 
 function drawFlower() {
     frameCounter++;
-    if (frameCounter % 4 === 0) {
+    if (frameCounter % 3 === 0) {
         if (ringIdx < petalRings.length) {
             let ring = petalRings[ringIdx];
             let angle = (Math.PI * 2 / ring.count) * petalIdx;
@@ -153,13 +163,11 @@ function drawMessage() {
     if (textLetters < customMessage.length) {
         textLetters += 0.05;
     } else {
-        state = 4; // الثبات النهائي
+        state = 4;
     }
 }
 
-// إعادة رسم الساق والأوراق السابقة عند تغيير لون الخلفية كي لا تضيع
 function redrawPreviousElements() {
-    // رسم الساق
     ctx.strokeStyle = '#2ed573';
     ctx.lineWidth = 5;
     ctx.shadowBlur = 12;
@@ -169,7 +177,6 @@ function redrawPreviousElements() {
     ctx.quadraticCurveTo(centerX + 12, centerY + 120, centerX, centerY);
     ctx.stroke();
 
-    // رسم الأوراق
     ctx.fillStyle = '#2ed573';
     ctx.beginPath();
     ctx.ellipse(centerX - 35, centerY + 130, 30, 12, -Math.PI / 4, 0, Math.PI * 2);
@@ -181,15 +188,13 @@ function redrawPreviousElements() {
 
 function animate() {
     if (state < 4) {
-        // تغيير الخلفية حسب المرحلة الحالية
         let targetBg = bgStyle;
         if (state === 0 || state === 1) {
-            targetBg = '#001a0d'; // خلفية خضراء غامقة عند رسم الساق والأوراق
+            targetBg = '#001a0d'; // خلفية خضراء للساق
         } else if (state === 2 || state === 3) {
-            targetBg = '#220011'; // خلفية وردية غامقة عند بدء الوردة والرسالة
+            targetBg = '#220011'; // خلفية غوز للوردة
         }
 
-        // عند التحول لمرحلة الوردة (تغير لون الخلفية)، يتم تنظيف الشاشة وإعادة رسم الساق والأوراق أولاً
         if (targetBg !== bgStyle) {
             bgStyle = targetBg;
             ctx.fillStyle = bgStyle;
@@ -206,7 +211,6 @@ function animate() {
     }
 }
 
-// تعبئة الخلفية الأولية
 ctx.fillStyle = '#001a0d';
 ctx.fillRect(0, 0, width, height);
 
