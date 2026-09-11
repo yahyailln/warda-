@@ -1,9 +1,9 @@
 const canvas = document.getElementById('heartCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext(2d');
 
 // ==========================================
 // ✏️ اكتب رسالتك هنا بين الأقواس:
-const customMessage = "smhilia kanbghiiiiiiik";
+const customMessage = "smhilia ahbiba kanbghiik";
 // ==========================================
 
 function setupCanvas() {
@@ -17,7 +17,7 @@ const height = canvas.height;
 const centerX = width / 2;
 const centerY = height / 2 - 20;
 
-let state = 0; // 0: stem, 1: leaves, 2: flower rings, 3: text, 4: finished
+let state = 0; // 0: stem, 1: leaves, 2: flower, 3: text, 4: finished
 let progress = 0;
 
 // 1. رسم الساق بالأخضر
@@ -37,7 +37,7 @@ function drawStem() {
     ctx.stroke();
 
     if (progress < 1) {
-        progress += 0.008; // رسم بطيء للساق
+        progress += 0.008;
     } else {
         state = 1;
         progress = 0;
@@ -66,48 +66,60 @@ function drawLeaves() {
     ctx.fill();
 
     if (progress < 1) {
-        progress += 0.012; // رسم بطيء للأوراق
+        progress += 0.012;
     } else {
         state = 2;
         progress = 0;
     }
 }
 
-// 3. دوائر البتلات الوردي (Rings)
-const rings = [
-    { radius: 20, count: 6, length: 30, color: '#ff75a0' },
-    { radius: 35, count: 9, length: 45, color: '#ff4d8d' },
-    { radius: 50, count: 12, length: 60, color: '#ff1a75' },
-    { radius: 65, count: 15, length: 70, color: '#e6005c' }
+// رسم بتلة وردة حقيقية بـ Bezier Curves
+function drawRealPetal(x, y, radius, angle, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    ctx.fillStyle = color;
+    ctx.strokeStyle = '#ff99c8';
+    ctx.lineWidth = 1;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = color;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-radius / 2, -radius / 2, -radius / 2, -radius, 0, -radius);
+    ctx.bezierCurveTo(radius / 2, -radius, radius / 2, -radius / 2, 0, 0);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+// إعداد درجات الوردة الحقيقية
+const petalRings = [
+    { count: 5, radius: 25, color: '#ff1a75' },
+    { count: 7, radius: 45, color: '#ff4d8d' },
+    { count: 9, radius: 65, color: '#ff75a0' },
+    { count: 11, radius: 85, color: '#ffb3c6' }
 ];
 
-let ringIndex = 0;
-let petalIndex = 0;
+let ringIdx = 0;
+let petalIdx = 0;
 let frameCounter = 0;
 
 function drawFlower() {
     frameCounter++;
-    if (frameCounter % 4 === 0) { // إبطاء سرعة تكوين البتلات
-        if (ringIndex < rings.length) {
-            let ring = rings[ringIndex];
-            let angle = (Math.PI * 2 / ring.count) * petalIndex;
-            
-            let bx = centerX + Math.cos(angle) * ring.radius;
-            let by = centerY + Math.sin(angle) * ring.radius;
+    if (frameCounter % 6 === 0) {
+        if (ringIdx < petalRings.length) {
+            let ring = petalRings[ringIdx];
+            let angle = (Math.PI * 2 / ring.count) * petalIdx;
 
-            ctx.strokeStyle = ring.color;
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = ring.color;
-            ctx.lineWidth = 2;
+            drawRealPetal(centerX, centerY, ring.radius, angle, ring.color);
 
-            ctx.beginPath();
-            ctx.arc(bx, by, ring.length / 2, 0, Math.PI * 2);
-            ctx.stroke();
-
-            petalIndex++;
-            if (petalIndex >= ring.count) {
-                petalIndex = 0;
-                ringIndex++;
+            petalIdx++;
+            if (petalIdx >= ring.count) {
+                petalIdx = 0;
+                ringIdx++;
             }
         } else {
             state = 3;
@@ -131,13 +143,13 @@ function drawMessage() {
     if (textLetters < customMessage.length) {
         textLetters += 0.04;
     } else {
-        state = 4;
+        state = 4; // نهاية الرسم والتثبيت النهائي
     }
 }
 
-// 5. الوظيفة النهائية لتثبيت الوردة بالألوان الأصلية (الأخضر والغوز)
-function redrawFullFlower() {
-    // رسم الساق والأوراق بالأخضر
+// 5. تثبيت الوردة والرسالة نهائياً على الشاشة
+function redrawFullRose() {
+    // رسم الساق والأوراق
     ctx.strokeStyle = '#2ed573';
     ctx.lineWidth = 4;
     ctx.shadowBlur = 10;
@@ -155,25 +167,23 @@ function redrawFullFlower() {
     ctx.ellipse(centerX + 25, centerY + 60, 20, 8, Math.PI / 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // رسم البتلات بالوردي المتوهج
-    rings.forEach(ring => {
-        ctx.strokeStyle = ring.color;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = ring.color;
-        ctx.lineWidth = 2;
-
+    // رسم بتلات الوردة كاملة
+    petalRings.forEach(ring => {
         for (let i = 0; i < ring.count; i++) {
             let angle = (Math.PI * 2 / ring.count) * i;
-            let bx = centerX + Math.cos(angle) * ring.radius;
-            let by = centerY + Math.sin(angle) * ring.radius;
-
-            ctx.beginPath();
-            ctx.arc(bx, by, ring.length / 2, 0, Math.PI * 2);
-            ctx.stroke();
+            drawRealPetal(centerX, centerY, ring.radius, angle, ring.color);
         }
     });
 
-    // رسم الرسالة بالأوردي
+    // رسم قلب الوردة في المركز
+    ctx.fillStyle = '#ffe600';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#ffe600';
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // رسم الرسالة
     ctx.font = 'bold 38px "Segoe UI", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ff4d8d';
@@ -184,9 +194,6 @@ function redrawFullFlower() {
 
 function animate() {
     if (state < 4) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, width, height);
-
         if (state === 0) drawStem();
         else if (state === 1) drawLeaves();
         else if (state === 2) drawFlower();
@@ -194,9 +201,10 @@ function animate() {
 
         requestAnimationFrame(animate);
     } else {
+        // عند الانتهاء: إعادة رسم المشهد كاملاً وثباته للأبد
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, width, height);
-        redrawFullFlower();
+        redrawFullRose();
     }
 }
 
